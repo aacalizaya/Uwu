@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EcoImpacto – Evaluación de impactos ambientales</title>
+<style>
+:root{--bg:#f2f6f4;--surf:#fff;--ink:#12302a;--mut:#5b6f69;--line:#d3dedb;--agua:#1d6fa3;--aire:#6b7b89;--suelo:#8a5a2b;--ok:#2f8f5b;--mod:#d4a017;--sev:#d9701f;--crit:#c0392b;--pos:#2f8f5b}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0f1a17;--surf:#17262a;--ink:#e4efeb;--mut:#93a8a1;--line:#2b3f39;--agua:#5aaee0;--aire:#9fb0bd;--suelo:#c99562}}
+:root{color-scheme:light dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Segoe UI",system-ui,-apple-system,sans-serif}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme=light]){--surf:#17262a}}
+header{padding:20px 20px 8px;max-width:1100px;margin:auto}
+h1{margin:0;font-size:26px;letter-spacing:-.3px}
+h2{font-size:18px;margin:0 0 12px}
+header p{margin:4px 0 12px;color:var(--mut)}
+main{max-width:1100px;margin:auto;padding:0 20px 40px;display:grid;gap:16px}
+section{background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:18px}
+label{display:block;font-size:13px;color:var(--mut);margin-bottom:3px}
+input,select,textarea{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit}
+input:focus,select:focus,button:focus-visible,textarea:focus{outline:2px solid var(--agua);outline-offset:1px}
+.row{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));align-items:end}
+button{font:inherit;padding:8px 14px;border-radius:6px;border:1px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer}
+button.sec{background:transparent;color:var(--ink);border-color:var(--line)}
+button.x{padding:2px 8px;background:transparent;color:var(--mut);border-color:var(--line)}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.wrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:640px}
+th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top;font-size:14px}
+th{color:var(--mut);font-weight:600;font-size:13px}
+.chip{display:inline-block;padding:1px 9px;border-radius:99px;font-size:12px;color:#fff;white-space:nowrap}
+.agua{background:var(--agua)}.aire{background:var(--aire)}.suelo{background:var(--suelo)}
+.l-Bajo{background:var(--ok)}.l-Moderado{background:var(--mod);color:#222}.l-Severo{background:var(--sev)}.l-Crítico{background:var(--crit)}.l-Positivo{background:var(--pos)}
+.grid3{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.kpi{border:1px solid var(--line);border-radius:8px;padding:12px;border-left-width:6px}
+.kpi b{font-size:24px;display:block}
+.kpi.agua{border-left-color:var(--agua);background:none}.kpi.aire{border-left-color:var(--aire);background:none}.kpi.suelo{border-left-color:var(--suelo);background:none}
+.dist{display:flex;height:10px;border-radius:5px;overflow:hidden;margin-top:8px;background:var(--line)}
+.dist i{display:block}
+.cell{text-align:center;color:#fff;font-weight:600;border-radius:4px;padding:4px}
+.empty{color:var(--mut);padding:10px 0}
+.note{font-size:13px;color:var(--mut);margin-top:10px}
+.pill{display:inline-block;margin:2px 4px 2px 0;padding:2px 9px;border:1px solid var(--line);border-radius:99px;font-size:12px;cursor:pointer;background:none;color:var(--ink)}
+</style>
+</head>
+<body>
+<header>
+  <h1>EcoImpacto</h1>
+  <p>Registra las actividades del proyecto, identifica sus aspectos ambientales y evalúa el impacto sobre agua, aire y suelo.</p>
+  <label for="proj">Nombre del proyecto</label>
+  <input id="proj" placeholder="Ej.: Construcción de planta de procesamiento">
+</header>
+<main>
+<section>
+  <h2>1. Actividades del proyecto</h2>
+  <div class="row">
+    <div><label for="an">Actividad</label><input id="an" placeholder="Ej.: Excavación y movimiento de tierras"></div>
+    <div><label for="ap">Etapa</label><select id="ap"><option>Construcción</option><option>Operación</option><option>Mantenimiento</option><option>Cierre</option></select></div>
+    <div><button id="addA">Agregar actividad</button></div>
+  </div>
+  <div id="acts" class="wrap"></div>
+</section>
+
+<section>
+  <h2>2. Aspecto ambiental e impacto</h2>
+  <div class="row">
+    <div><label for="ia">Actividad</label><select id="ia"></select></div>
+    <div><label for="ic">Componente afectado</label><select id="ic"><option value="agua">Agua</option><option value="aire">Aire</option><option value="suelo">Suelo</option></select></div>
+    <div><label for="is">Tipo de impacto</label><select id="is"><option value="-1">Negativo</option><option value="1">Positivo</option></select></div>
+  </div>
+  <div style="margin-top:10px"><label>Aspectos frecuentes (toca uno para usarlo)</label><div id="sug"></div></div>
+  <div class="row" style="margin-top:8px">
+    <div><label for="asp">Aspecto ambiental</label><input id="asp" placeholder="Ej.: Emisión de material particulado"></div>
+    <div><label for="imp">Impacto</label><input id="imp" placeholder="Ej.: Deterioro de la calidad del aire"></div>
+  </div>
+  <div class="row" style="margin-top:12px">
+    <div><label for="si">Intensidad (1–5)</label><select id="si"></select></div>
+    <div><label for="se">Extensión (1–5)</label><select id="se"></select></div>
+    <div><label for="sd">Duración (1–5)</label><select id="sd"></select></div>
+    <div><label for="sr">Persistencia / reversibilidad (1–5)</label><select id="sr"></select></div>
+    <div><label for="sp">Probabilidad (1–5)</label><select id="sp"></select></div>
+  </div>
+  <div class="bar"><button id="addI">Agregar impacto</button><span id="prev" class="note"></span></div>
+  <p class="note">Significancia = (3×Intensidad + 2×Extensión + Duración + Persistencia) × Probabilidad ÷ 5. Escala de 1,4 a 35: Bajo &lt; 10, Moderado 10–19, Severo 20–27, Crítico ≥ 28. Es una metodología simplificada; ajústala a la que exija tu autoridad ambiental.</p>
+</section>
+
+<section>
+  <h2>3. Resultados</h2>
+  <div id="kpis" class="grid3"></div>
+  <h2 style="margin-top:20px">Matriz actividad × componente</h2>
+  <div id="mx" class="wrap"></div>
+  <h2 style="margin-top:20px">Registro de impactos</h2>
+  <div id="imps" class="wrap"></div>
+  <div class="bar">
+    <button id="csv">Exportar CSV</button>
+    <button id="json" class="sec">Guardar JSON</button>
+    <button id="load" class="sec">Cargar JSON</button>
+    <button id="clr" class="sec">Borrar todo</button>
+    <input id="file" type="file" accept=".json" hidden>
+  </div>
+</section>
+</main>
+<script>
+const SUG={
+ agua:["Vertimiento de aguas residuales","Consumo de agua","Escorrentía con sedimentos","Derrame de combustibles o aceites","Lavado de equipos y vehículos"],
+ aire:["Emisión de material particulado","Emisión de gases de combustión","Generación de ruido","Emisión de olores","Emisión de gases de efecto invernadero"],
+ suelo:["Generación de residuos sólidos","Remoción de cobertura vegetal","Compactación del suelo","Derrame de hidrocarburos","Generación de residuos peligrosos"]
+};
+const NOM={agua:"Agua",aire:"Aire",suelo:"Suelo"};
+let S={proj:"",acts:[],imps:[]};
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+function save(){try{localStorage.setItem("ecoimpacto",JSON.stringify(S))}catch(e){}}
+function load(){try{const r=localStorage.getItem("ecoimpacto");if(r){const d=JSON.parse(r);if(d&&d.acts&&d.imps)S=d}}catch(e){}}
+
+function score(i){const v=(3*i.i+2*i.e+i.d+i.r)*i.p/5;return Math.round(v*10)/10}
+function level(i){if(i.sign>0)return"Positivo";const v=score(i);return v>=28?"Crítico":v>=20?"Severo":v>=10?"Moderado":"Bajo"}
+function lcolor(l){return{Bajo:"var(--ok)",Moderado:"var(--mod)",Severo:"var(--sev)","Crítico":"var(--crit)",Positivo:"var(--pos)"}[l]}
+const actName=id=>(S.acts.find(a=>a.id===id)||{name:"(eliminada)"}).name;
+
+function fillSelects(){
+  document.querySelectorAll("#si,#se,#sd,#sr,#sp").forEach(s=>{if(!s.options.length)for(let n=1;n<=5;n++)s.add(new Option(n,n))});
+  ["si","se","sd","sr","sp"].forEach(id=>{if(!$(id).dataset.init){$(id).value=3;$(id).dataset.init=1}});
+}
+function renderSug(){
+  $("sug").innerHTML=SUG[$("ic").value].map(t=>`<button type="button" class="pill" data-t="${esc(t)}">${esc(t)}</button>`).join("");
+}
+function preview(){
+  const i={i:+$("si").value,e:+$("se").value,d:+$("sd").value,r:+$("sr").value,p:+$("sp").value,sign:+$("is").value};
+  $("prev").textContent="Significancia estimada: "+score(i)+" – "+level(i);
+}
+function render(){
+  $("proj").value=S.proj||"";
+  $("acts").innerHTML=S.acts.length?`<table><tr><th>Actividad</th><th>Etapa</th><th>Impactos</th><th></th></tr>${S.acts.map(a=>`<tr><td>${esc(a.name)}</td><td>${esc(a.phase)}</td><td>${S.imps.filter(i=>i.act===a.id).length}</td><td><button class="x" data-da="${a.id}" aria-label="Eliminar actividad">✕</button></td></tr>`).join("")}</table>`:`<p class="empty">Aún no hay actividades. Agrega la primera arriba.</p>`;
+  $("ia").innerHTML=S.acts.map(a=>`<option value="${a.id}">${esc(a.name)} (${esc(a.phase)})</option>`).join("")||`<option value="">Primero agrega una actividad</option>`;
+
+  const comps=["agua","aire","suelo"];
+  $("kpis").innerHTML=comps.map(c=>{
+    const L=S.imps.filter(i=>i.comp===c),neg=L.filter(i=>i.sign<0);
+    const mx=neg.length?Math.max(...neg.map(score)):0;
+    const cnt={Bajo:0,Moderado:0,Severo:0,"Crítico":0};neg.forEach(i=>cnt[level(i)]++);
+    const tot=neg.length||1;
+    return`<div class="kpi ${c}"><span>${NOM[c]}</span><b>${L.length} impacto${L.length==1?"":"s"}</b><span class="note">Máxima significancia: ${mx||"–"}</span><div class="dist" title="Distribución por nivel">${Object.keys(cnt).map(k=>cnt[k]?`<i style="width:${cnt[k]/tot*100}%;background:${lcolor(k)}"></i>`:"").join("")}</div><span class="note">${Object.keys(cnt).map(k=>k+": "+cnt[k]).join(" · ")}</span></div>`}).join("");
+
+  $("mx").innerHTML=S.acts.length?`<table><tr><th>Actividad</th>${comps.map(c=>`<th>${NOM[c]}</th>`).join("")}</tr>${S.acts.map(a=>`<tr><td>${esc(a.name)}</td>${comps.map(c=>{
+    const L=S.imps.filter(i=>i.act===a.id&&i.comp===c&&i.sign<0);
+    if(!L.length){const P=S.imps.some(i=>i.act===a.id&&i.comp===c);return`<td>${P?'<div class="cell" style="background:var(--pos)">+</div>':'<span class="empty">–</span>'}</td>`}
+    const w=L.reduce((m,i)=>score(i)>score(m)?i:m);
+    return`<td><div class="cell" style="background:${lcolor(level(w))};${level(w)=="Moderado"?"color:#222":""}">${score(w)}</div></td>`}).join("")}</tr>`).join("")}</table>`:`<p class="empty">La matriz aparecerá cuando registres actividades e impactos.</p>`;
+
+  $("imps").innerHTML=S.imps.length?`<table><tr><th>Actividad</th><th>Aspecto</th><th>Impacto</th><th>Componente</th><th>I/E/D/P/Pr</th><th>Valor</th><th>Nivel</th><th></th></tr>${S.imps.map(i=>`<tr><td>${esc(actName(i.act))}</td><td>${esc(i.aspect)}</td><td>${esc(i.impact)}</td><td><span class="chip ${i.comp}">${NOM[i.comp]}</span></td><td>${i.i}/${i.e}/${i.d}/${i.r}/${i.p}</td><td>${i.sign>0?"+":""}${score(i)}</td><td><span class="chip l-${level(i)}">${level(i)}</span></td><td><button class="x" data-di="${i.id}" aria-label="Eliminar impacto">✕</button></td></tr>`).join("")}</table>`:`<p class="empty">Todavía no hay impactos registrados.</p>`;
+  preview();
+}
+
+$("proj").oninput=e=>{S.proj=e.target.value;save()};
+$("addA").onclick=()=>{const n=$("an").value.trim();if(!n){$("an").focus();return}S.acts.push({id:uid(),name:n,phase:$("ap").value});$("an").value="";save();render()};
+$("an").onkeydown=e=>{if(e.key==="Enter")$("addA").click()};
+$("addI").onclick=()=>{
+  if(!$("ia").value){alert("Primero agrega una actividad.");return}
+  const asp=$("asp").value.trim(),imp=$("imp").value.trim();
+  if(!asp||!imp){alert("Completa el aspecto ambiental y el impacto.");return}
+  S.imps.push({id:uid(),act:$("ia").value,comp:$("ic").value,aspect:asp,impact:imp,sign:+$("is").value,i:+$("si").value,e:+$("se").value,d:+$("sd").value,r:+$("sr").value,p:+$("sp").value});
+  $("asp").value="";$("imp").value="";save();render()};
+$("ic").onchange=renderSug;
+$("sug").onclick=e=>{const t=e.target.dataset.t;if(t){$("asp").value=t;$("imp").focus()}};
+document.querySelectorAll("#si,#se,#sd,#sr,#sp,#is").forEach(s=>s.onchange=preview);
+document.body.addEventListener("click",e=>{
+  const da=e.target.dataset.da,di=e.target.dataset.di;
+  if(da&&confirm("¿Eliminar la actividad y sus impactos?")){S.acts=S.acts.filter(a=>a.id!==da);S.imps=S.imps.filter(i=>i.act!==da);save();render()}
+  if(di){S.imps=S.imps.filter(i=>i.id!==di);save();render()}
+});
+function download(name,text,type){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
+$("csv").onclick=()=>{
+  const q=v=>'"'+String(v).replace(/"/g,'""')+'"';
+  const rows=[["Proyecto","Actividad","Etapa","Aspecto ambiental","Impacto","Componente","Signo","Intensidad","Extensión","Duración","Persistencia","Probabilidad","Significancia","Nivel"]];
+  S.imps.forEach(i=>{const a=S.acts.find(x=>x.id===i.act)||{};rows.push([S.proj,a.name||"",a.phase||"",i.aspect,i.impact,NOM[i.comp],i.sign>0?"Positivo":"Negativo",i.i,i.e,i.d,i.r,i.p,score(i),level(i)])});
+  download("impactos-ambientales.csv","\ufeff"+rows.map(r=>r.map(q).join(",")).join("\n"),"text/csv")};
+$("json").onclick=()=>download("ecoimpacto.json",JSON.stringify(S,null,2),"application/json");
+$("load").onclick=()=>$("file").click();
+$("file").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.acts||!d.imps)throw 0;S=d;save();render()}catch(x){alert("El archivo no es un JSON válido de EcoImpacto.")}};r.readAsText(f);e.target.value=""};
+$("clr").onclick=()=>{if(confirm("¿Borrar todo el proyecto?")){S={proj:"",acts:[],imps:[]};save();render()}};
+
+fillSelects();load();renderSug();render();
+</script>
+</body>
+</html>
